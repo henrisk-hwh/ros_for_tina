@@ -1,0 +1,97 @@
+ROS indigo base版本移植（无GUI）
+
+目标：能够使用catkin交叉编译ROS系统和ROS应用，移植到板子上能够正常使用
+主机平台：ubuntu14.04
+ROS版本：Indigo Igloo
+目标系统：tina_2.1(parrot)
+目标硬件：R16 parrot nand开发板
+
+主要包含下列包的移植：
+(注释带有【*】标记的组件需要进行交叉编译，另外根据catkin依赖知道，需要移植python2.7。需要交叉编译的包都依赖boost库，因此也需要移植boost)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~  traversing 49 packages in topological order:
+~~  - catkin			基于cmake的ros编译系统,主要由python脚本和shell脚本构成，不需要交叉编译
+~~  - genmsg			独立的python库，用于生成各种语言的ROS消息和服务数据结构，不需要交叉编译
+~~  - gencpp			C++语言的ROS消息和服务生成器，python脚本，不需要交叉编译
+~~  - genlisp			lisp语言的ROS消息和服务生成器，python脚本，不需要交叉编译
+~~  - genpy			python语言的ROS消息和服务生成器，python脚本，不需要交叉编译
+~~  - cmake_modules		共用的cmake模块库，cmake没有发布但在ROS包编译上经常用到，编译相关，cmake脚本，不需要交叉编译
+~~  - cpp_common		roscpp_core的子包(roscpp_core是支持roscpp消息数据类型的底层库)，对很多包起作用，c++代码实现，依赖boost、libconsole-bridge-dev库，需要交叉编译【*】
+~~  - message_generation	内部无实际代码或脚本，仅包含CMakeLists.txt和package.xml文件，不需要交叉编译
+~~  - message_runtime		内部无实际代码或脚本，仅包含CMakeLists.txt和package.xml文件，不需要交叉编译
+~~  - mk			ros的子包（ros包为ros的构建系统，包含各种脚本文件构成的子包），.mk编译脚本集合，不需要交叉编译
+~~  - ros			ros的子包，内部无实际代码或脚本，仅包含CMakeLists.txt和package.xml文件，不需要交叉编译
+~~  - ros_comm			ros_comm的子包(ros_comm包含ROS通信相关包，包括核心客户端库 roscpp, rospy) ,仅包含CMakeLists.txt和package.xml文件，不需要交叉编译
+~~  - rosbash			ros的子包，各种供ros使用的bash脚本，不需要交叉编译
+~~  - rosboost_cfg		ros的子包，包含供rosboost-cfg工具使用的脚本，用于配置boost，不需要交叉编译
+~~  - rosbuild			ros的子包，包含用于管理基于cmake编译系统的脚本，不需要交叉编译
+~~  - rosclean			ros的子包，rosclean命令，清除ros文件系统资源，如清除log文件，python脚本实现，不需要交叉编译
+~~  - roscpp_traits		roscpp_core的子包，包含消息特征相关的头文件，仅有头文件，不需要交叉编译
+~~  - roscreate			ros的子包，提供帮助ros创建文件系统资源的工具，如创建带有构建和清单文件的ros包，python脚本实现，不需要交叉编译
+~~  - rosgraph			ros_comm的子包,包含rosgraph命令行工具，用于打印关于ROS的计算图形信息。并提供了一个内部库，供图形工具使用。python脚本实现，不需要交叉编译
+~~  - roslang			ros的子包，供gos客户端库使用的公共包，主要用于寻找客户端库，cmake脚本文件，不需要交叉编译
+~~  - roslisp			lisp语言实现的ros客户端库，不需要交叉编译
+~~  - rosmake			ros的子包，rosmake是ROS依赖的构建工具可以用正确的顺序生成所有的依赖，python脚本实现，不需要交叉编译
+~~  - rosmaster			ros_comm的子包,ros的master端实现，以python脚本实现，不需要交叉编译
+~~  - rosmsg			ros_comm的子包,提供ros命令行工具rosmsg和rossrv，以python脚本实现，不需要交叉编译
+~~  - rospack			ros的打包工具，用于检索文件系统中ros包的可用信息，c++实现，需要交叉编译【*】
+~~  - roslib			ros的子包，ros基本依赖和支持库，包含c++代码实现，需要交叉编译【*】
+~~  - rosparam			ros_comm的子包,提供ros命令行工具rosparam，用于以YAML编码文件方式设置和获取参数，python脚本实现，不需要交叉编译
+~~  - rospy			ros_comm的子包,ros的纯python实现，提供客户端库topic、service、parameters的python接口，不需要交叉编译
+~~  - rosservice		ros_comm的子包,提供ros命令行工具rosservice，用于列出和查询ros服务，python脚本实现，不需要交叉编译
+~~  - rostime			roscpp_core的子包，包含时间和时间间隔的代码，c++代码实现，依赖cpp_common、boost库，需要交叉编译【*】
+~~  - roscpp_serialization	roscpp_core的子包，包含一些用于序列化的代码，c++代码实现，依赖cpp_common、roscpp_traits、rostime库，需要交叉编译【*】
+~~  - roslaunch			ros_comm的子包,命令行工具，用于启动多个ros节点，或通过ssh远程启动节点，python脚本实现，不需要交叉编译
+~~  - rosunit			ros的子包，用于ros包的单元测试，python脚本实现，不需要交叉编译
+
+
+
+~~  - rosconsole		ros_comm的子包,c++实现的包，支持roscpp的控制台输出和日志，需要交叉编译【*】
+~~  - roslz4			ros_comm的子包,Python和C++实现的lz4格式压缩算法，需要交叉编译【*】
+~~  - rosbag_storage		ros_comm的子包,用于topic回放，不依赖于ros客户端库，需要交叉编译【*】
+~~  - rostest			ros_comm的子包,基于roslaunch的集成测试套件，与xUnit框架兼容，含有c++代码，需要交叉编译【*】
+~~  - std_msgs			包含标准ros消息的定义，不需要交叉编译   需要？？
+~~  - rosgraph_msgs		ros_comm_msgs的子包，包含用于ros计算图相关的消息定义，不需要交叉编译  需要？？
+~~  - std_srvs			ros_comm_msgs的子包，公用服务定义，包含Empty和Trigger两个服务类型，不需要交叉编译
+~~  - xmlrpcpp			ros_comm的子包,c++实现的XML-RPC协议支持，需要交叉编译【*】
+~~  - roscpp			ros_comm的子包,ros的c++实现，提供客户端库topic、service、parameters的接口，需要交叉编译【*】
+~~  - rosout			ros_comm的子包,系统级的信息发送到/rosout话题的日志记录机制，c++实现，需要交叉编译【*】
+~~  - message_filters		ros_comm的子包,用于根据条件过滤消息，需要交叉编译【*】
+
+
+~~  - rosnode			ros_comm的子包,提供ros命令行工具rosnode，用于显示ros节点的调试信息，python脚本实现，不需要交叉编译
+~~  - rostopic			ros_comm的子包,提供ros命令行工具rostopic，用于显示topic的调试信息，python脚本实现，不需要交叉编译
+~~  - roswtf			ros_comm的子包,提供ros命令行工具roswtf，用于诊断正在运行的ros系统，python脚本实现，不需要交叉编译
+
+
+~~  - topic_tools		ros_comm的子包,用于指示方向、节流、选择和以其他方式扰乱ROS主题的工具，c++实现，需要交叉编译【*】
+~~  - rosbag			ros_comm的子包,用于topic回放，需要交叉编译【*】
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+一、移植boost c++库(ok)；
+
+二、移植python2.7(ok)；
+
+三、移植ros相关包。
+
+编译命令：./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release 
+src文件夹为已交叉编译包，bak文件夹为需要处理的包
+修改过ros/src/cmake_modules/cmake/Modules/FindTinyXML.cmake文件。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
